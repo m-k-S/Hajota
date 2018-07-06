@@ -5,16 +5,17 @@
 from opcodes import *
 
 class Instruction:
-    def __init__(self, Opcode, Arg):
+    def __init__(self, Opcode, Arg, Address):
         self.Opcode = Opcode
         self.Arg = Arg
+        self.Address = Address
 
     def toString(self):
-        if self.Arg:
-            # print("{} 0x{}".format(self.Opcode, self.Arg))
-            return ("{} 0x{}".format(self.toString(self.Opcode), str(self.Arg)))
+        if self.Arg is not None:
+            return ("[{}]: {} {}".format(hex(self.Address), toString(self.Opcode), hex(self.Arg)))
         else:
-            return toString(self.Opcode)
+            return ("[{}]: {}".format(hex(self.Address), toString(self.Opcode)))
+
 
 class BasicBlock:
     def __init__(self, Instructions, Offset, Next):
@@ -39,6 +40,14 @@ class Program:
 
 def newProgram(bytecode):
     bytecodeLength = len(bytecode)
+
+    # Removes trailing hash information
+    if (bytecode[bytecodeLength - 1] == 0x29) and (bytecode[bytecodeLength - 2] == 0x00) \
+        and (bytecode[bytecodeLength - 43] == 0xa1) and (bytecode[bytecodeLength - 42] == 0x65):
+            bytecodeLength -= 43
+            bytecode = bytecode[:bytecodeLength]
+
+
     program = Program([], {})
 
     currentBlock = BasicBlock([], 0, None)
@@ -47,7 +56,7 @@ def newProgram(bytecode):
     while i < bytecodeLength:
         op = OpCode(bytecode[i])
         size = op.operandSize()
-        arg = 0
+        arg = None
         if size > 0:
             arg = 0
             j = 1
@@ -57,10 +66,10 @@ def newProgram(bytecode):
                     arg = arg ^ bytecode[i + j]
                 j += 1
 
-        if op == JUMPDEST:
+        if op.isJumpDest():
             if len(currentBlock.Instructions) > 0:
                 program.Blocks.append(currentBlock)
-                newBlock = BasicBlack([], i, None)
+                newBlock = BasicBlock([], i, None)
                 currentBlock.Next = newBlock
                 currentBlock = newBlock
 
@@ -68,10 +77,14 @@ def newProgram(bytecode):
             program.JumpDestinations[i] = currentBlock
 
         else:
-            instruction = Instruction(op, arg)
+            instruction = Instruction(op, arg, None)
             currentBlock.Instructions.append(instruction)
+            address = currentBlock.Offset - 1
+            for instr in currentBlock.Instructions:
+                address += instr.Opcode.operandSize() + 1
+            currentBlock.Instructions[-1].Address = address
 
-            if (op.isJump()) or (op == RETURN) or (op == SELFDESTRUCT) or (op == STOP) or (op == INVALID) or (op == REVERT):
+            if (op.isJump()) or (op.Ends()):
                 program.Blocks.append(currentBlock)
                 newBlock = BasicBlock([], i + size + 1, None)
                 currentBlock.Next = newBlock
@@ -79,7 +92,7 @@ def newProgram(bytecode):
 
         i += size + 1
 
-    if (len(currentBlock.Instructions) > 0) or (program.JumpDestinations[currentBlock.Offset]):
+    if (len(currentBlock.Instructions) > 0) or (currentBlock.Offset in program.JumpDestinations):
         program.Blocks.append(currentBlock)
 
     else:
