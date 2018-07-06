@@ -2,6 +2,8 @@
 
 # Takes bytecode as input and returns program structure
 
+from opcodes import *
+
 class Instruction:
     def __init__(self, Opcode, Arg):
         self.Opcode = Opcode
@@ -10,9 +12,9 @@ class Instruction:
     def toString(self):
         if self.Arg:
             # print("{} 0x{}".format(self.Opcode, self.Arg))
-            return ("{} 0x{}".format(self.Opcode.toString(), str(self.Arg)))
+            return ("{} 0x{}".format(self.toString(self.Opcode), str(self.Arg)))
         else:
-            return self.Opcode.toString()
+            return toString(self.Opcode)
 
 class BasicBlock:
     def __init__(self, Instructions, Offset, Next):
@@ -47,6 +49,7 @@ def newProgram(bytecode):
         size = op.operandSize()
         arg = 0
         if size > 0:
+            arg = 0
             j = 1
             while j <= size:
                 arg = arg << 8
