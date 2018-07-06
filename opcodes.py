@@ -6,37 +6,37 @@ class OpCode:
     def __init__(self, op):
         self.Op = op
 
-    def isPush():
+    def isPush(self):
         if 0x60 <= Op <= 0x7f:
             return True
         else:
             return False
 
-    def hasSideEffects():
+    def hasSideEffects(self):
         if Op == 0xf1:
             return True
         else:
             return False
 
-    def isDup():
+    def isDup(self):
         if 0x80 <= Op <= 0x8f:
             return True
         else:
             return False
 
-    def isSwap():
+    def isSwap(self):
         if 0x90 <= Op <= 0x9f:
             return True
         else:
             return False
 
-    def operandSize():
+    def operandSize(self):
         if not op.isPush():
             return 0
         else:
             return int(Op - 0x60 + 1)
 
-    def IsJump():
+    def isJump(self):
         if (Op == 0x56) or (Op == 0x57):
             return True
         else:
