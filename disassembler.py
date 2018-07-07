@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.7
 
 # Takes bytecode as input and returns program structure
 
@@ -34,9 +34,10 @@ class BasicBlock:
         return -1
 
 class Program:
-    def __init__(self, Blocks, JumpDestinations):
+    def __init__(self, Blocks, JumpDestinations, Functions):
         self.Blocks = Blocks
         self.JumpDestinations = JumpDestinations
+        self.Functions = Functions
 
 def newProgram(bytecode):
     bytecodeLength = len(bytecode)
@@ -48,7 +49,7 @@ def newProgram(bytecode):
             bytecode = bytecode[:bytecodeLength]
 
 
-    program = Program([], {})
+    program = Program([], {}, {})
 
     currentBlock = BasicBlock([], 0, None)
 
@@ -97,5 +98,18 @@ def newProgram(bytecode):
 
     else:
         program.Blocks[len(program.Blocks) - 1].Next = None
+
+    return program
+
+def computeProgramFunctions(program):
+    instructions = []
+    for block in program.Blocks:
+        for instruction in block.Instructions:
+            instructions.append(instruction)
+
+    for index in range(len(instructions)):
+        if (instructions[index].Opcode.Op == 0x63) and (instructions[index+1].Opcode.Op == 0x14) and (instructions[index+3].Opcode.Op == 0x57):
+            destination = instructions[index+2].Arg
+            program.Functions[destination] = "_function_{}".format(hex(instructions[index].Arg))
 
     return program

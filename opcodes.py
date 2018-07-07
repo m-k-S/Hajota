@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.7
 
 # Opcode structure for bytecode processing
 
@@ -43,7 +43,7 @@ class OpCode:
             return False
 
     def isJumpDest(self):
-        if (self.Op == 0x61):
+        if (self.Op == 0x5b):
             return True
         else:
             return False
@@ -92,6 +92,8 @@ OpcodeString = {
     0x3a: "GASPRICE",
     0x3b: "EXTCODESIZE",
     0x3c: "EXTCODECOPY",
+    0x3d: "RETURNDATASIZE",
+    0x3e: "RETURNDATACOPY",
     0x40: "BLOCKHASH",
     0x41: "COINBASE",
     0x42: "TIMESTAMP",
@@ -190,10 +192,12 @@ OpcodeString = {
 }
 
 def toString(Opcode):
-    opString = OpcodeString[Opcode.Op]
-    if len(opString) == 0:
-        print("Missing opcode 0x{}".format(str(opString)))
+    try:
+        opString = OpcodeString[Opcode.Op]
+    except KeyError:
+        print("Missing opcode 0x{}".format(str(Opcode.Op)))
         return 0
+
     return opString
 
 def stringToOp(opString):

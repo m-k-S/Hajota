@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.7
 
 import disassembler
 from opcodes import *
@@ -12,7 +12,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with open(args.bytecode) as f:
-        bytecode = f.read()
+        bytecode = f.read().rstrip()
         bytecode = [bytecode[i:i+2] for i in range(0, len(bytecode), 2)]
         for j in range(len(bytecode)):
             bytecode[j] = int("0x" + bytecode[j], 0)
@@ -20,18 +20,16 @@ if __name__ == "__main__":
         Disassembled = disassembler.newProgram(bytecode)
 
         if args.dict:
+            Disassembled = disassembler.computeProgramFunctions(Disassembled)
             instruction_list = []
             for block in Disassembled.Blocks:
-                offset = block.Offset
-
                 for instruction in block.Instructions:
                     instruction_list.append({"address": instruction.Address, "opcode": toString(instruction.Opcode), "argument": instruction.Arg})
 
-            print instruction_list
+            # print (instruction_list)
+            print (Disassembled.Functions)
 
         else:
             for block in Disassembled.Blocks:
-                offset = block.Offset
-
                 for instruction in block.Instructions:
-                    print instruction.toString()
+                    print (instruction.toString())
